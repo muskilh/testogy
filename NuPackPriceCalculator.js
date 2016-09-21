@@ -1,5 +1,4 @@
 "use strict";
-var expect = require('expect');
 const BASE_MARKUP = 1.05;
 
 
@@ -26,16 +25,7 @@ function wordsToMarkupCategories(words) {
     return [];
 }
 
-console.log(priceCalc(2));
-
-//Tests
-expect(function () {
-    priceCalc(0);
-    throw new Error('test');
-}).toThrow(/test/);
-
-expect(
-    priceCalc(0)
-).toEqual(0);
-
-console.log('Tests Passed!');
+module.exports = {
+  priceCalc,
+  wordsToMarkupCategories
+};
