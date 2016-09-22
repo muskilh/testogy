@@ -183,6 +183,16 @@ expect(
     NPPC.priceCalc("$1,299.99", "3 people", "food and drugs")
 ).toEqual("$1,693.95");
 
+console.log("Testing Duplicate Categories: ($1,299.99, 3 people, food and food)");
+expect(
+    NPPC.priceCalc("$1,299.99", "3 people", "food and food")
+).toEqual("$1,591.58");
+
+console.log("Testing Duplicate Categories But Different Associations: ($1,299.99, 3 people, food and cookies)");
+expect(
+    NPPC.priceCalc("$1,299.99", "3 people", "food and cookies")
+).toEqual("$1,591.58");
+
 console.log("Testing Food Category Association pt1: ($1,299.99, 3 people, cookie)");
 expect(
     NPPC.priceCalc("$1,299.99", "3 people", "cookie")
@@ -201,6 +211,16 @@ expect(
 console.log("Testing Electronics Category Association pt3: ($1,299.99, 3 people, tv)");
 expect(
     NPPC.priceCalc("$1,299.99", "3 people", "tv")
+).toEqual("$1,441.43");
+
+console.log("Testing Price as Double Instead of String: (1299.99, 3 people, tv)");
+expect(
+    NPPC.priceCalc(1299.99, "3 people", "tv")
+).toEqual("$1,441.43");
+
+console.log("Testing People as Int Instead of String: (1299.99, 3, tv)");
+expect(
+    NPPC.priceCalc(1299.99, 3, "tv")
 ).toEqual("$1,441.43");
 
 

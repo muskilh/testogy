@@ -3,15 +3,17 @@ const BASE_MARKUP = 1.05;
 
 
 /**
- * Adds markup to base price based on the number of people and mark up categories involved
+ * Adds markup to base price based on the number of people and mark up categories involved as per requirements doc.
  * @function priceCalc
- * @param {String} basePrice - base price in usd/cad currency
- * @param {String} people - number of people needed
- * @param {String} categoryPhrase - the markup category/categories
- * @return {String} The final price quote
+ * @param {String} basePrice - Base price in usd/cad currency format. Also accepts double and int as inputs.
+ * @param {String} people - Number of people needed. 
+ *                  The first "word" of the string must be an int (i.e. "3 people"). All other numbers will be ignored
+ * @param {String} categoryPhrase - A word/phrase containing word(s) associated with the markup categories
+ *                  If multiple categories are detected, duplicates will be ignored and all unique markups will be applied
+ * @return {String} The final price quote as a string formatted as usd/cad currency
  */
 function priceCalc(basePrice, people, categoryPhrase) {
-    var out = 0;
+    var out = 0; //The final output, will be over written below.
     
     //First check the args and transform them into useable values; (aka double, int, str)
     if (typeof basePrice === 'undefined' || basePrice == null)  throw new Error("Argument Missing");
@@ -56,36 +58,63 @@ function priceCalc(basePrice, people, categoryPhrase) {
     categoryPhraseTransformed = wordsToMarkupCategories(categoryPhraseTransformed);
     
     //Run the actual calculations
-    out = priceCalcCore(basePriceTransformed, peopleTransformed, categoryPhraseTransformed);
+    out = priceCalcHelper(basePriceTransformed, peopleTransformed, categoryPhraseTransformed);
     
     //Format to proper string and return
     return "$" + out.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 }
-function priceCalcCore(basePrice, people, category) {
-    var out = Math.round(basePrice * 100) / 100 * BASE_MARKUP;
-    var markups = 1 + (people * 0.012);
+
+
+/**
+ * Helper function for priceCalc. Given actual numbers and a list of markup categories, calculates the quote as per requirements doc.
+ * @function priceCalcHelper
+ * @param {double} basePrice - Base price to be used in calculations
+ * @param {int} people - Number of people needed.
+ * @param {Array} categories - A list of markup categories. 
+ *                  If multiple categories are detected, all will be applied, including duplicates.
+ * @return {double} The final price quote as a double
+ */
+function priceCalcHelper(basePrice, people, categories) {
+    //Start by adding base markup
+    var out = Math.round(basePrice * 100) / 100 * BASE_MARKUP; //This will be the final price outputted
+    var markups = 1; //The markups to be added
     
-    for (var c of category) {
-        if (c == "food"){
-            markups += 0.13;
-        }
-        if (c == "pharmaceuticals"){
-            markups += 0.075;
-        }
-        if (c == "electronics"){
-            markups += 0.02;
+    //Set the rates for various aspects
+    var peopleRate = 0.012;
+    var categoryRates = {
+        "food": 0.13,
+        "pharmaceuticals": 0.075,
+        "electronics": 0.02,
+        "other": 0.00 //We'll add this instead of skipping it in case we need to change it later
+    };
+    
+    //Calculate the additional markups to be added
+    markups += people * peopleRate; 
+    
+    //Add markups from categories
+    for (var category of categories) {
+        if (category in categoryRates){
+            markups += categoryRates[category];
+        } else {
+            markups += categoryRates['other'];
         }
     }
     
-    //Apply markup
+    //Apply markup to the price
     out = out * markups;
     
-    //Round and force 2 decimal points
-    out = (Math.round( (out) *Math.pow(10,2))/Math.pow(10,2));
-    return out;
+    //Round and force 2 decimal points, then return
+    return (Math.round( (out) *Math.pow(10,2))/Math.pow(10,2));
 }
 
-//Maps words into markup categories
+
+/**
+ * Maps a word/phrase into a list of the associated markup categories
+ * @function wordsToMarkupCategories
+ * @param {String} words - A word or phrase containing word(s) associated with markup categories
+ * @return {Array} An array of all markup categories found within the "words" input 
+ *                  or an empty array if none were found
+ */
 function wordsToMarkupCategories(words) {
     // In reality this should be using a database and/or use some natural language library to
     // group the word associations and deal with plurality (i.e. food vs foods)
